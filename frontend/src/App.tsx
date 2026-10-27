@@ -35,7 +35,7 @@ interface QuizProps {
   onLogout: () => void;
 }
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://student-quiz-backend-z9jt.onrender.com";
 
 function App() {
   const [token, setToken] = useState(
