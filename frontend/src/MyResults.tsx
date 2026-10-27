@@ -26,7 +26,7 @@ export default function MyResults() {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/api/results", {
+       const response = await fetch("https://student-quiz-backend-z9jt.onrender.com/api/results", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
