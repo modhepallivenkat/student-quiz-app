@@ -22,8 +22,22 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET is missing from the environment variables.");
 }
 
+// Middleware
 app.use(cors());
 app.use(express.json());
+
+// Backend homepage
+app.get("/", (_req: Request, res: Response) => {
+  res.status(200).send("Student Quiz App Backend is running successfully!");
+});
+
+// Health-check endpoint
+app.get("/health", (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: "OK",
+    message: "Student Quiz App Backend is healthy.",
+  });
+});
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -38,7 +52,9 @@ function authenticateToken(
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ message: "Please log in first." });
+    res.status(401).json({
+      message: "Please log in first.",
+    });
     return;
   }
 
@@ -48,7 +64,9 @@ function authenticateToken(
     const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
 
     if (typeof decoded.userId !== "string") {
-      res.status(401).json({ message: "Invalid token." });
+      res.status(401).json({
+        message: "Invalid token.",
+      });
       return;
     }
 
@@ -56,7 +74,8 @@ function authenticateToken(
     next();
   } catch {
     res.status(401).json({
-      message: "Your login session is invalid or expired. Please log in again.",
+      message:
+        "Your login session is invalid or expired. Please log in again.",
     });
   }
 }
@@ -121,7 +140,10 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
     }
 
     console.error("Registration error:", error);
-    res.status(500).json({ message: "Registration failed." });
+
+    res.status(500).json({
+      message: "Registration failed.",
+    });
   }
 });
 
@@ -154,9 +176,13 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id.toString() },
+      {
+        userId: user._id.toString(),
+      },
       JWT_SECRET,
-      { expiresIn: "1h" }
+      {
+        expiresIn: "1h",
+      }
     );
 
     res.json({
@@ -170,7 +196,10 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Login failed." });
+
+    res.status(500).json({
+      message: "Login failed.",
+    });
   }
 });
 
@@ -233,6 +262,7 @@ app.post(
       }
 
       const total = questions.length;
+
       const percentage =
         total > 0 ? Math.round((score / total) * 100) : 0;
 
@@ -253,6 +283,7 @@ app.post(
       });
     } catch (error) {
       console.error("Error saving quiz result:", error);
+
       res.status(500).json({
         message: "Could not save quiz result.",
       });
@@ -276,6 +307,7 @@ app.get(
       res.json(results);
     } catch (error) {
       console.error("Error fetching results:", error);
+
       res.status(500).json({
         message: "Could not fetch quiz results.",
       });
@@ -290,13 +322,26 @@ app.get("/api/leaderboard", async (_req: Request, res: Response) => {
       {
         $group: {
           _id: "$userId",
-          bestScore: { $max: "$score" },
-          total: { $max: "$total" },
-          bestPercentage: { $max: "$percentage" },
+          bestScore: {
+            $max: "$score",
+          },
+          total: {
+            $max: "$total",
+          },
+          bestPercentage: {
+            $max: "$percentage",
+          },
         },
       },
-      { $sort: { bestScore: -1, bestPercentage: -1 } },
-      { $limit: 10 },
+      {
+        $sort: {
+          bestScore: -1,
+          bestPercentage: -1,
+        },
+      },
+      {
+        $limit: 10,
+      },
       {
         $lookup: {
           from: "users",
@@ -305,7 +350,9 @@ app.get("/api/leaderboard", async (_req: Request, res: Response) => {
           as: "student",
         },
       },
-      { $unwind: "$student" },
+      {
+        $unwind: "$student",
+      },
       {
         $project: {
           _id: 0,
@@ -320,6 +367,7 @@ app.get("/api/leaderboard", async (_req: Request, res: Response) => {
     res.json(leaderboard);
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
+
     res.status(500).json({
       message: "Could not fetch leaderboard.",
     });
@@ -332,7 +380,9 @@ async function startServer(): Promise<void> {
     const mongoUri = process.env.MONGO_URI;
 
     if (!mongoUri) {
-      throw new Error("MONGO_URI is missing from the environment variables.");
+      throw new Error(
+        "MONGO_URI is missing from the environment variables."
+      );
     }
 
     await mongoose.connect(mongoUri);
